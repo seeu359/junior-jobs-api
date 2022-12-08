@@ -26,6 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.idea
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -38,6 +39,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+*.xml
 htmlcov/
 .tox/
 .nox/
@@ -56,6 +58,7 @@ coverage.xml
 *.pot
 
 # Django stuff:
+*.sqlite
 *.log
 local_settings.py
 db.sqlite3
