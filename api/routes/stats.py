@@ -1,9 +1,8 @@
 from fastapi import APIRouter
-from fastapi.responses import Response
-from ..db_logic import get_processed_data, ResponseData
-from pydantic import BaseModel
-from typing import Literal
-
+from fastapi.responses import JSONResponse
+from api.services import get_processed_data
+from api.services import get_request_data
+from loguru import logger
 
 router = APIRouter(
     prefix='/stat',
@@ -11,32 +10,32 @@ router = APIRouter(
 )
 
 
-class Languages(BaseModel):
-    language: Literal[
-        'python',
-        'ruby',
-        'javascript',
-        'java',
-        'php',
-    ]
+@router.get('/{language}')
+async def stat_by_language(
+        language: str,
+        date1: str | None = None,
+        date2: str | None = None,
+) -> JSONResponse:
 
+    data = get_request_data(language, param1=date1, param2=date2)
+    response_data, status_code = get_processed_data(data)
 
-class CompareTypes(BaseModel):
-    compare_type: Literal[
-        'today',
-        'perweek',
-        'permonth',
-        'per3month',
-        'per6month',
-        'peryear',
-                  ] | None
+    logger.error(response_data)
+    return JSONResponse(
+        content=response_data,
+        status_code=status_code
+    )
 
 
 @router.get('/{language}/{compare_type}')
-async def stat(language: str, compare_type: str) -> ResponseData:
-    data = {
-        'language': language,
-        'compare_type': compare_type,
-        }
-    response_data: ResponseData = get_processed_data(data)
-    return response_data
+async def stat_by_compare_type(
+        language: str, compare_type: str
+) -> JSONResponse:
+
+    data = get_request_data(language, compare_type)
+    response_data, status_code = get_processed_data(data)
+
+    return JSONResponse(
+        response_data,
+        status_code=status_code,
+    )

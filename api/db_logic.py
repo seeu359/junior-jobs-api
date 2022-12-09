@@ -1,74 +1,50 @@
-import datetime
-from api import models
-from pydantic import BaseModel, ValidationError
-from typing import Literal
+from api import orm_models
 from datetime import date
 
 
-class Languages(BaseModel):
-    languages: Literal['python', 'java', 'javascript', 'php', 'ruby']
+class DBStat:
+
+    def __init__(self, request_to_db=None):
+        self.request_to_db = request_to_db
+
+    def __set_name__(self, owner, name):
+        self.name = '_' + name
+
+    def __get__(self, instance, owner) -> orm_models.StatisticsORM:
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        with orm_models.session() as s:
+            if instance.compare_type:
+                instance.__dict__[self.name] = \
+                    s.query(orm_models.StatisticsORM).\
+                    join(orm_models.LanguagesORM).\
+                    filter(
+                    (orm_models.StatisticsORM.date == date.today()) &
+                    (orm_models.LanguagesORM.language == instance.language)).\
+                    first()
+            else:
+                instance.__dict__[self.name] = instance.stat_request()
 
 
-class ResponseData(BaseModel):
-    language: Languages
-    date: datetime.date
-    vacancies: int
-    no_experience: int
-    region: int
-    site: int
-    compare_type: str | None
+class DB:
 
+    stat = DBStat()
 
-def _get_response_data(
-        data: models.StatisticsORM,
-        language,
-        compare_type
-) -> ResponseData:
-    response = ResponseData(
-        language=language,
-        date=data.date,
-        vacancies=data.vacancies,
-        no_experience=data.no_experience,
-        region=data.region_id,
-        site=data.site_id,
-        compare_type=compare_type,
-    )
-    return response
+    def __init__(
+            self, language: str,
+            compare_type: str | None = None,
+            **queries: str
+    ):
+        self.language = language
+        self.compare_type = compare_type
+        self.queries = dict(**queries)
+        self.stat = None
 
-
-def get_processed_data(data: dict) -> ResponseData | dict:
-    try:
-        language, compare_type = parse_request_data(data)
-    except ValidationError:
-        return {'data': None}
-    if not compare_type:
-        pass
-    elif compare_type == 'today':
-        data_from_db = _get_today_stat(language.languages)
-        response_data = _get_response_data(data_from_db, language,
-                                           compare_type)
-        return response_data
-
-
-def parse_request_data(data: dict[str, str]) -> tuple[Languages, str]:
-    language = Languages(languages=data['language'])
-    compare_type = data['compare_type']
-    return language, compare_type
-
-
-# Make easiest request to db - request to get today data 
-def _get_today_stat(language: str):
-    with models.session() as s:
-        data = s.query(models.StatisticsORM).\
-            join(models.LanguagesORM).\
-            filter(
-                       (models.StatisticsORM.date == date.today()) &
-                       (models.LanguagesORM.language == language)).first()
-        return data
-
-
-def _get_data_by_language():
-    pass
-
-
-print(get_processed_data({'language': 'pyhon', 'compare_type': 'today'}))
+    def stat_request(self):
+        with orm_models.session() as s:
+            return s.query(orm_models.StatisticsORM). \
+                        join(orm_models.LanguagesORM). \
+                        filter(
+                        orm_models.LanguagesORM.language ==
+                        self.language).all()
