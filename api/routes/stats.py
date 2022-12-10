@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from api.services import get_processed_data
-from api.services import get_request_data
+from api.services import get_statistics, RequestParams, process_data
 from loguru import logger
 
 router = APIRouter(
@@ -11,14 +10,10 @@ router = APIRouter(
 
 
 @router.get('/{language}')
-async def stat_by_language(
-        language: str,
-        date1: str | None = None,
-        date2: str | None = None,
-) -> JSONResponse:
+async def stat_by_language(language: str) -> JSONResponse:
 
-    data = get_request_data(language, param1=date1, param2=date2)
-    response_data, status_code = get_processed_data(data)
+    params: RequestParams = process_data(language)
+    response_data, status_code = get_statistics(params)
 
     logger.error(response_data)
     return JSONResponse(
@@ -29,11 +24,19 @@ async def stat_by_language(
 
 @router.get('/{language}/{compare_type}')
 async def stat_by_compare_type(
-        language: str, compare_type: str
+        language: str,
+        compare_type: str,
+        date1: str | None = None,
+        date2: str | None = None,
 ) -> JSONResponse:
 
-    data = get_request_data(language, compare_type)
-    response_data, status_code = get_processed_data(data)
+    params: RequestParams = process_data(
+        language,
+        compare_type=compare_type,
+        param1=date1,
+        param2=date2,
+    )
+    response_data, status_code = get_statistics(params)
 
     return JSONResponse(
         response_data,

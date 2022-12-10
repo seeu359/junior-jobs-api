@@ -3,9 +3,11 @@ from pydantic import BaseModel
 from typing import TypedDict
 
 
-class PathParts(BaseModel):
+class RequestParams(BaseModel):
     language: Literal['python', 'java', 'javascript', 'php', 'ruby']
     compare_type: Literal['today', 'perweek'] | None
+    param1: str | None
+    param2: str | None
 
 
 class ResponseDone(TypedDict):
@@ -22,4 +24,9 @@ class ResponseError(TypedDict):
     errors: dict[str, str]
     language: str
     compare_type: str | None
-    query: dict | None
+    param1: str | None
+    param2: str | None
+
+
+def func(a, b, **kwargs):
+    return {**kwargs}
