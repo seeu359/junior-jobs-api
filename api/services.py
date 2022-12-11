@@ -1,12 +1,5 @@
-from fastapi import status
-from pydantic import ValidationError
-from typing import Union
-from api.db_logic import DB
-from api.orm_models import StatisticsORM
-from api.base_models import ResponseDone, ResponseError, RequestParams
-
-
-StatusCode = int
+from api import orm_models as om
+from api.base_models import RequestParams, ResponseDone, ResponseError
 
 
 def get_language(params: RequestParams) -> str:
@@ -73,62 +66,8 @@ def make_request_params(
     return params
 
 
-def process_data(
-        language,
-        compare_type=None,
-        **queries,
-) -> RequestParams | tuple[ResponseError, StatusCode]:  # Need to change docs!
-    """Abstraction for handling requests path parts and request queries
-        and validation them by BaseModel pydantic class.
-        Return data in dict type"""
-    try:
-        params = make_request_params(
-            language,
-            compare_type=compare_type,
-            **queries)
-    except ValidationError:
-        params = make_request_params(
-            language,
-            construct=True,
-            compare_type=compare_type,
-            **queries
-        )
-        return _get_response_error(params), status.HTTP_404_NOT_FOUND
-    return params
-
-
-def get_statistics(params: RequestParams) -> \
-        tuple[Union[ResponseDone, list[ResponseDone], ResponseError],
-              StatusCode]:
-
-    language = get_language(params)
-    compare_type = get_compare_type(params)
-
-    if not compare_type:
-        data_from_db = _get_list_data_by_language(language)
-        return data_from_db, status.HTTP_200_OK
-
-    elif compare_type == 'today':
-        data_from_db = DB(language, compare_type).stat
-        return _get_response_done(
-            data_from_db,
-            language,
-            compare_type), status.HTTP_200_OK
-
-
-def _get_list_data_by_language(
-        language: str
-) -> list[ResponseDone]:
-
-    data: list[StatisticsORM] = DB(language).stat
-    statistics = list()
-    for record in data:
-        statistics.append(_get_response_done(record, language))
-    return statistics
-
-
-def _get_response_done(
-        data: StatisticsORM,
+def get_response_done(
+        stat_obj: om.StatisticsORM,
         language: str,
         compare_type: str | None = None,
 ) -> ResponseDone:  # Need change docs!
@@ -140,22 +79,21 @@ def _get_response_done(
 
     return ResponseDone(
         language=language,
-        date=str(data.date),
-        vacancies=data.vacancies,
-        no_experience=data.no_experience,
-        region=data.region_id,
-        site=data.site_id,
+        date=str(stat_obj.date),
+        vacancies=stat_obj.vacancies,
+        no_experience=stat_obj.no_experience,
+        region=stat_obj.region_id,
+        site=stat_obj.site_id,
         compare_type=compare_type,
     )
 
 
-def _get_response_error(params: RequestParams) -> ResponseError:
+def get_response_error(params: RequestParams) -> ResponseError:
     # Need change docs!
     """Create pydantic BaseModel of error.
     Data from this model won't validate because data from user
     request has been checked yet! Other data comes from database and this
     data can be trusted"""
-
     return ResponseError(
         errors={
             'type': 'not_found',  # Plug

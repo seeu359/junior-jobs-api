@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel
-from typing import TypedDict
+from typing import NamedTuple
 
 
 class RequestParams(BaseModel):
@@ -10,7 +10,7 @@ class RequestParams(BaseModel):
     param2: str | None
 
 
-class ResponseDone(TypedDict):
+class ResponseDone(NamedTuple):
     language: str
     date: str
     vacancies: int
@@ -20,13 +20,9 @@ class ResponseDone(TypedDict):
     compare_type: str | None
 
 
-class ResponseError(TypedDict):
+class ResponseError(NamedTuple):
     errors: dict[str, str]
     language: str
     compare_type: str | None
     param1: str | None
     param2: str | None
-
-
-def func(a, b, **kwargs):
-    return {**kwargs}

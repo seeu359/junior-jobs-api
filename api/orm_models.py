@@ -1,11 +1,10 @@
 import datetime
-from sqlalchemy import create_engine, Enum
+from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
-from api import classes
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Boolean
 from api.settings import DATABASE
 from sqlalchemy.orm import declarative_base
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 engine = create_engine(DATABASE, future=True)
 
@@ -68,8 +67,8 @@ class Users(constructor):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False, default='')
-    experience = Column(Enum(classes.ExperienceType))
-    employed = Column(Enum(classes.Employed))
+    experience = Column(Boolean, nullable=False)
+    employed = Column(Boolean, nullable=False)
     telegram_id = Column(Integer, nullable=False, unique=True)
     description = Column(String, default='', unique=False)
 
@@ -84,6 +83,17 @@ class StatisticsModel(BaseModel):
 
     class Config:
 
+        orm_mode = True
+
+
+class UsersModel(BaseModel):
+    name: constr(max_length=250)
+    experience: bool
+    employed: bool
+    telegram_id: int
+    description: str
+
+    class Config:
         orm_mode = True
 
 

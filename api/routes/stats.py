@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
-from api.services import get_statistics, RequestParams, process_data
+from api.logic import get_statistics, RequestParams, process_data, \
+    ResponseError, ResponseDone
 from loguru import logger
 
 router = APIRouter(
@@ -12,13 +13,18 @@ router = APIRouter(
 @router.get('/{language}')
 async def stat_by_language(language: str) -> JSONResponse:
 
-    params: RequestParams = process_data(language)
-    response_data, status_code = get_statistics(params)
+    params: RequestParams | ResponseError = process_data(language)
+    if isinstance(params, ResponseError):
+        return JSONResponse(
+            content=params._asdict(),
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    response_done: ResponseDone = get_statistics(params)
 
-    logger.error(response_data)
+    logger.error(response_done)
     return JSONResponse(
-        content=response_data,
-        status_code=status_code
+        content=response_done,
+        status_code=status.HTTP_200_OK
     )
 
 
@@ -30,15 +36,20 @@ async def stat_by_compare_type(
         date2: str | None = None,
 ) -> JSONResponse:
 
-    params: RequestParams = process_data(
+    params: RequestParams | ResponseError = process_data(
         language,
         compare_type=compare_type,
         param1=date1,
         param2=date2,
     )
-    response_data, status_code = get_statistics(params)
+    if isinstance(params, ResponseError):
+        return JSONResponse(
+            content=params._asdict(),
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    response_done: ResponseDone = get_statistics(params)
 
     return JSONResponse(
-        response_data,
-        status_code=status_code,
+        content=response_done._asdict(),
+        status_code=status.HTTP_200_OK,
     )
