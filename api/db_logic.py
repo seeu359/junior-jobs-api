@@ -1,72 +1,65 @@
 from api import orm_models as om
-from api.base_models import RequestParams, ResponseDone
-from api.services import get_queries, get_language, get_compare_type, \
-    get_response_done
-from datetime import date
+from api.base_models import RequestParams, Statistics
+from api.services import get_queries, get_language, get_compare_type
+from datetime import date, timedelta
+from loguru import logger
 
 
-class DBStat:
-
-    def __set_name__(self, owner, name):
-        self.name = '_' + name
-
-    def __get__(self, instance, owner) -> om.StatisticsORM:
-        return instance.__dict__[self.name]
-
-    def __set__(self, db_instance, value):
-        if db_instance.compare_type == 'today':
-            db_instance.__dict__[self.name] = db_instance.get_today_stat()
-        else:
-            db_instance.__dict__[self.name]: list[om.StatisticsORM] = \
-                db_instance.get_stat_by_lang()
-        db_instance.__dict__[self.name] = db_instance.to_response_model()
+TIMEDELTA_DAYS = {
+    'week': 7,
+    'month': 30,
+}
 
 
 class DB:
 
-    stat = DBStat()
-
     def __init__(
             self,
-            params: RequestParams,
+            params: RequestParams
     ):
         self.language = get_language(params)
         self.compare_type = get_compare_type(params)
         self.queries = get_queries(params)
-        self.stat = None
+        self.stat = Statistics(today=None, ct_stat=None, array_stat=None)
+        self._mapper()
 
-    def get_stat_by_lang(self) -> list[ResponseDone]:
+    def _mapper(self):
+        if self.compare_type == 'today':
+            self.get_today_stat()
+        elif self.compare_type is None:
+            return self.get_array_of_stats()
+        else:
+            return self.get_ct_stats()
+
+    def get_array_of_stats(self) -> None:
         with om.session() as s:
-            return s.query(om.StatisticsORM).\
+            request_to_db = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM). \
                 filter(
                 om.LanguagesORM.language ==
                 self.language).all()
+            self.stat['array_stat'] = request_to_db
 
-    def get_today_stat(self):
+    def get_today_stat(self) -> None:
         with om.session() as s:
-            return s.query(om.StatisticsORM).\
+            request_to_db = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM). \
                 filter(
                 (om.StatisticsORM.date == date.today()) &
-                (om.LanguagesORM.language == self.language)). \
+                (om.LanguagesORM.language == self.language)).\
                 first()
+            self.stat['today'] = request_to_db
 
-    def to_response_model(self) -> list[ResponseDone] | ResponseDone:
-        if isinstance(self.stat, list):
-            for obj in self.stat:
-                index = self.stat.index(obj)
-                response_obj = get_response_done(
-                    obj,
-                    self.language,
-                    self.compare_type
-                )
-                self.stat[index] = response_obj._asdict()
-            return self.stat
-        else:
-            response_done = get_response_done(
-                self.stat,
-                self.language,
-                self.compare_type
-            )
-            return response_done
+    def get_ct_stats(self) -> None:
+        time_delta = date.today() - timedelta(
+            days=TIMEDELTA_DAYS[self.compare_type]
+        )
+        logger.info(time_delta)
+        with om.session() as s:
+            self.get_today_stat()
+            ct_stat = s.query(om.StatisticsORM).\
+                join(om.LanguagesORM).\
+                filter(
+                (om.StatisticsORM.date == time_delta) &
+                (om.LanguagesORM.language == self.language)).first()
+            self.stat['ct_stat'] = ct_stat

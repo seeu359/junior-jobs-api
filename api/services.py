@@ -1,5 +1,8 @@
 from api import orm_models as om
-from api.base_models import RequestParams, ResponseDone, ResponseError
+from api.base_models import RequestParams, Response200, Response404, \
+    CTResponse200, Statistics
+
+COEFFICIENT = 100
 
 
 def get_language(params: RequestParams) -> str:
@@ -66,35 +69,66 @@ def make_request_params(
     return params
 
 
-def get_response_done(
-        stat_obj: om.StatisticsORM,
-        language: str,
-        compare_type: str | None = None,
-) -> ResponseDone:  # Need change docs!
+def get_response_200(
+        params: RequestParams,
+        statistics: Statistics,
+) -> Response200 | list[Response200] | CTResponse200:  # Need change docs!
 
     """Create pydantic BaseModel with responses data.
     Data from this model won't validate because data from user
     request has been checked yet! Other data comes from database and this
     data can be trusted"""
+    if params.compare_type == 'today':
+        today = statistics['today']
+        return Response200(
+            language=params.language,
+            compare_type=params.compare_type,
+            date=str(today.date),
+            vacancies=today.vacancies,
+            no_experience=today.no_experience,
+            region=today.region_id,
+            site=today.site_id,
+        )
+    if not params.compare_type:
+        stat_array: list[om.StatisticsORM] = statistics['array_stat']
+        result = list()
+        for stat in stat_array:
+            result.append(Response200(
+                language=params.language,
+                compare_type=params.compare_type,
+                date=str(stat.date),
+                vacancies=stat.vacancies,
+                no_experience=stat.no_experience,
+                region=stat.region_id,
+                site=stat.site_id,
+            ))
+        return result
 
-    return ResponseDone(
-        language=language,
-        date=str(stat_obj.date),
-        vacancies=stat_obj.vacancies,
-        no_experience=stat_obj.no_experience,
-        region=stat_obj.region_id,
-        site=stat_obj.site_id,
-        compare_type=compare_type,
-    )
+    else:
+        today = statistics['today']
+        ct_stat = statistics['ct_stat']
+        stats = _compute_stat(today, ct_stat)
+        return CTResponse200(
+            language=params.language,
+            compare_type=params.compare_type,
+            date_ct=str(ct_stat.date),
+            date_now=str(today.date),
+            jobs_were=ct_stat.vacancies,
+            jobs_now=today.vacancies,
+            comparison={
+                'in_amount': stats['in_amount'],
+                'in_percent': stats['in_percent'],
+            }
+        )
 
 
-def get_response_error(params: RequestParams) -> ResponseError:
+def get_response_404(params: RequestParams) -> Response404:
     # Need change docs!
     """Create pydantic BaseModel of error.
     Data from this model won't validate because data from user
     request has been checked yet! Other data comes from database and this
     data can be trusted"""
-    return ResponseError(
+    return Response404(
         errors={
             'type': 'not_found',  # Plug
             'count': 1
@@ -104,3 +138,14 @@ def get_response_error(params: RequestParams) -> ResponseError:
         param1=get_queries(params)['param1'],
         param2=get_queries(params)['param2'],
     )
+
+
+def _compute_stat(now: om.StatisticsORM, ct_stat: om.StatisticsORM) \
+        -> dict[str, int]:
+    in_amount = now.vacancies - ct_stat.vacancies
+    in_percents = round(now.vacancies / ct_stat.vacancies *
+                        COEFFICIENT - COEFFICIENT)
+    return {
+        'in_amount': in_amount,
+        'in_percent': in_percents,
+    }
