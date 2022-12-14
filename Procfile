@@ -1,1 +1,1 @@
-web: gunicorn task_manager.wsgi
+web: uvicorn api.scripts.app:app --reload
