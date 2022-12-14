@@ -6,6 +6,7 @@ from api.settings import DATABASE
 from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel, constr
 
+
 engine = create_engine(DATABASE, future=True)
 
 session = sessionmaker(engine)

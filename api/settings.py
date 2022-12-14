@@ -8,6 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SQLITE = 'sqlite:///' + str(BASE_DIR) + '/db.sqlite'
 
-POSTGRES = os.getenv('PG_CONNECT')
+POSTGRES = os.getenv('PGCONNECT')
 
-DATABASE = POSTGRES if POSTGRES else SQLITE
+DEBUG = os.getenv('DEBUG', False)
+
+DATABASE = SQLITE if DEBUG else POSTGRES
+
+print(DATABASE)

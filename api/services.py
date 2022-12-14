@@ -81,8 +81,8 @@ def get_response_200(
     if params.compare_type == 'today':
         today = statistics['today']
         return Response200(
-            language=params.language,
-            compare_type=params.compare_type,
+            language=get_language(params),
+            compare_type=get_language(params),
             date=str(today.date),
             vacancies=today.vacancies,
             no_experience=today.no_experience,
@@ -94,8 +94,8 @@ def get_response_200(
         result = list()
         for stat in stat_array:
             result.append(Response200(
-                language=params.language,
-                compare_type=params.compare_type,
+                language=get_language(params),
+                compare_type=get_compare_type(params),
                 date=str(stat.date),
                 vacancies=stat.vacancies,
                 no_experience=stat.no_experience,
@@ -109,8 +109,8 @@ def get_response_200(
         ct_stat = statistics['ct_stat']
         stats = _compute_stat(today, ct_stat)
         return CTResponse200(
-            language=params.language,
-            compare_type=params.compare_type,
+            language=get_language(params),
+            compare_type=get_compare_type(params),
             date_ct=str(ct_stat.date),
             date_now=str(today.date),
             jobs_were=ct_stat.vacancies,
