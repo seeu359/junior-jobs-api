@@ -1,1 +1,1 @@
-web: uvicorn api.scripts.app:app --reload
+web: uvicorn api.scripts.app:app --reload --host 0.0.0.0
