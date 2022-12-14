@@ -13,5 +13,3 @@ POSTGRES = os.getenv('PGCONNECT')
 DEBUG = os.getenv('DEBUG', False)
 
 DATABASE = SQLITE if DEBUG else POSTGRES
-
-print(DATABASE)
