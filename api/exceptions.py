@@ -1,0 +1,2 @@
+class InvalidDateParams(Exception):
+    pass

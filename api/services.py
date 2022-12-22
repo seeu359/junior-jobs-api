@@ -1,4 +1,5 @@
 from api import orm_models as om
+from api.exceptions import InvalidDateParams
 from api.base_models import RequestParams, Response200, Response404, \
     CTResponse200, Statistics
 
@@ -30,9 +31,17 @@ def get_queries(params: RequestParams) -> dict:
     :return: str
     """
     return {
-        'param1': params.param1,
-        'param2': params.param2,
+        'date1': params.date1,
+        'date2': params.date2,
     }
+
+
+def check_queries(params: RequestParams):
+    dates = get_queries(params)
+    if not dates['date1'] and not dates['date2']:
+        return
+    if dates['date1'] > dates['date2']:
+        raise InvalidDateParams('The transmitted time interval is incorrect')
 
 
 def make_request_params(
@@ -63,13 +72,25 @@ def make_request_params(
     params = constructor(
         language=language,
         compare_type=compare_type,
-        param1=queries.get('param1', None),
-        param2=queries.get('param2', None),
+        date1=queries.get('date1', None),
+        date2=queries.get('date2', None),
     )
     return params
 
 
-def get_response_200(
+def get_response_200(params: RequestParams, statistics: Statistics):
+    if get_compare_type(params) == 'today':
+        return _get_today_response_200(params, statistics)
+    elif get_compare_type(params) is None:
+        return _get_list_of_response200(params, statistics)
+    elif get_queries(params)['date1'] is not None and \
+            get_queries(params)['date2'] is not None:
+        return _get_response200_with_queries(params, statistics)
+    else:
+        return _get_ct_response_200(params, statistics)
+
+
+def _get_today_response_200(
         params: RequestParams,
         statistics: Statistics,
 ) -> Response200 | list[Response200] | CTResponse200:  # Need change docs!
@@ -78,72 +99,97 @@ def get_response_200(
     Data from this model won't validate because data from user
     request has been checked yet! Other data comes from database and this
     data can be trusted"""
-    if params.compare_type == 'today':
-        today = statistics['today']
-        return Response200(
-            language=get_language(params),
-            compare_type=get_language(params),
-            date=str(today.date),
-            vacancies=today.vacancies,
-            no_experience=today.no_experience,
-            region=today.region_id,
-            site=today.site_id,
-        )
-    if not params.compare_type:
-        stat_array: list[om.StatisticsORM] = statistics['array_stat']
-        result = list()
-        for stat in stat_array:
-            result.append(Response200(
-                language=get_language(params),
-                compare_type=get_compare_type(params),
-                date=str(stat.date),
-                vacancies=stat.vacancies,
-                no_experience=stat.no_experience,
-                region=stat.region_id,
-                site=stat.site_id,
-            ))
-        return result
+    today = statistics['today']
+    return Response200(
+        language=get_language(params),
+        compare_type=get_language(params),
+        date=str(today.date),
+        vacancies=today.vacancies,
+        no_experience=today.no_experience,
+        region=today.region_id,
+        site=today.site_id,
+    )
 
-    else:
-        today = statistics['today']
-        ct_stat = statistics['ct_stat']
-        stats = _compute_stat(today, ct_stat)
-        return CTResponse200(
+
+def _get_list_of_response200(
+        params: RequestParams,
+        statistics: Statistics) -> list[Response200]:
+    stat_list: list[om.StatisticsORM] = statistics['array_stat']
+    result = list()
+    for stat in stat_list:
+        result.append(Response200(
             language=get_language(params),
             compare_type=get_compare_type(params),
-            date_ct=str(ct_stat.date),
-            date_now=str(today.date),
-            jobs_were=ct_stat.vacancies,
-            jobs_now=today.vacancies,
-            comparison={
-                'in_amount': stats['in_amount'],
-                'in_percent': stats['in_percent'],
-            }
-        )
+            date=str(stat.date),
+            vacancies=stat.vacancies,
+            no_experience=stat.no_experience,
+            region=stat.region_id,
+            site=stat.site_id,
+        ))
+    return result
 
 
-def get_response_404(params: RequestParams) -> Response404:
+def _get_ct_response_200(
+        params: RequestParams,
+        statistics: Statistics) -> CTResponse200:
+
+    date1 = statistics.get('today')
+    date2 = statistics.get('ct_stat')
+    stats = _compute_stat(date1, date2)
+    return CTResponse200(
+        language=get_language(params),
+        compare_type=get_compare_type(params),
+        date1=str(date1.date),
+        date2=str(date2.date),
+        vacs_became=date1.vacancies,
+        vacs_were=date2.vacancies,
+        comparison={
+            'in_amount': stats['in_amount'],
+            'in_percent': stats['in_percent'],
+        }
+    )
+
+
+def _get_response200_with_queries(
+        params: RequestParams,
+        statistics: Statistics) -> CTResponse200:
+
+    date1 = statistics['custom_stat']['date1']
+    date2 = statistics['custom_stat']['date2']
+    stats = _compute_stat(date2, date1)
+    return CTResponse200(
+        language=get_language(params),
+        compare_type=get_compare_type(params),
+        date1=str(date1.date),
+        date2=str(date2.date),
+        vacs_were=date1.vacancies,
+        vacs_became=date2.vacancies,
+        comparison={
+            'in_amount': stats['in_amount'],
+            'in_percent': stats['in_percent'],
+        }
+    )
+
+
+def get_response_404(params: RequestParams, error) -> Response404:
     # Need change docs!
     """Create pydantic BaseModel of error.
     Data from this model won't validate because data from user
     request has been checked yet! Other data comes from database and this
     data can be trusted"""
     return Response404(
-        errors={
-            'type': 'not_found',  # Plug
-            'count': 1
-        },
+        errors=error,
         language=get_language(params),
         compare_type=get_compare_type(params),
-        param1=get_queries(params)['param1'],
-        param2=get_queries(params)['param2'],
+        date1=get_queries(params)['date1'],
+        date2=get_queries(params)['date2'],
     )
 
 
-def _compute_stat(now: om.StatisticsORM, ct_stat: om.StatisticsORM) \
+def _compute_stat(reduced: om.StatisticsORM, reducer: om.StatisticsORM) \
         -> dict[str, int]:
-    in_amount = now.vacancies - ct_stat.vacancies
-    in_percents = round(now.vacancies / ct_stat.vacancies *
+    in_amount = reduced.vacancies - reducer.vacancies
+    in_percents = round(reduced.vacancies / reducer.vacancies *
                         COEFFICIENT - COEFFICIENT)
     return {
         'in_amount': in_amount,

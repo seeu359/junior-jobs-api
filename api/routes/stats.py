@@ -1,6 +1,7 @@
-from loguru import logger
+import loguru
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
+from loguru import logger
 from api.logic import get_statistics, process_user_request
 from api.base_models import Response200, Response404, RequestParams
 
@@ -22,7 +23,6 @@ async def stat_by_language(language: str) -> JSONResponse:
         )
     response_done: list[Response200] = get_statistics(params)
 
-    logger.error(response_done)
     return JSONResponse(
         content=[item._asdict() for item in response_done],
         status_code=status.HTTP_200_OK
@@ -40,9 +40,10 @@ async def stat_by_compare_type(
     params: RequestParams | Response404 = process_user_request(
         language,
         compare_type=compare_type,
-        param1=date1,
-        param2=date2,
+        date1=date1,
+        date2=date2,
     )
+    logger.info(params)
     if isinstance(params, Response404):
         return JSONResponse(
             content=params._asdict(),

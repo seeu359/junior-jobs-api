@@ -6,9 +6,9 @@ from api.orm_models import StatisticsORM
 
 class RequestParams(BaseModel):
     language: Literal['python', 'java', 'javascript', 'php', 'ruby']
-    compare_type: Literal['today', 'week', 'month'] | None
-    param1: str | None
-    param2: str | None
+    compare_type: Literal['today', 'week', 'month', 'custom'] | None
+    date1: str | None
+    date2: str | None
 
 
 class Response200(NamedTuple):
@@ -24,22 +24,23 @@ class Response200(NamedTuple):
 class CTResponse200(NamedTuple):
     language: str
     compare_type: str
-    date_ct: str
-    date_now: str
-    jobs_were: int
-    jobs_now: int
+    date1: str
+    date2: str
+    vacs_were: int
+    vacs_became: int
     comparison: dict[str, int]
 
 
 class Response404(NamedTuple):
-    errors: dict[str, str]
+    errors: str
     language: str
     compare_type: str | None
-    param1: str | None
-    param2: str | None
+    date1: str | None
+    date2: str | None
 
 
 class Statistics(TypedDict):
     today: StatisticsORM | None
     ct_stat: StatisticsORM | None
     array_stat: list[StatisticsORM] | None
+    custom_stat: dict[str, StatisticsORM | None] | None

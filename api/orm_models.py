@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Date, Boolean
 from api.settings import DATABASE
 from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel, constr
+import sqlite3
 
 
 engine = create_engine(DATABASE, future=True)
