@@ -10,6 +10,8 @@ SQLITE = 'sqlite:///' + str(BASE_DIR) + '/testdb.sqlite'
 
 POSTGRES = os.getenv('PGCONNECT')
 
-DEBUG = os.getenv('DEBUG', True)
+DEBUG = os.getenv('DEBUG', False)
 
 DATABASE = SQLITE if DEBUG else POSTGRES
+
+print(DATABASE)
