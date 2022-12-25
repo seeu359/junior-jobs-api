@@ -1,14 +1,25 @@
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from loguru import logger
-from api.logic import get_statistics, process_user_request
+from api.logic import get_statistics, process_user_request, upload_statistics
 from api.base_models import Response200, Response404, RequestParams
 
 
 router = APIRouter(
     prefix='/stat',
-    tags=['stat'],
+    tags=['stat']
 )
+
+
+@router.post('/upload')
+async def upload_stats() -> JSONResponse:
+    response = upload_statistics()
+    status_code = status.HTTP_200_OK if response['success'] else \
+        status.HTTP_403_FORBIDDEN
+    return JSONResponse(
+        content=response,
+        status_code=status_code,
+    )
 
 
 @router.get('/{language}')

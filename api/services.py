@@ -1,4 +1,5 @@
 from api import orm_models as om
+from pydantic import ValidationError
 from api.exceptions import InvalidDateParams
 from api.base_models import RequestParams, Response200, Response404, \
     CTResponse200, Statistics
@@ -6,7 +7,7 @@ from api.base_models import RequestParams, Response200, Response404, \
 COEFFICIENT = 100
 
 
-def get_language(params: RequestParams) -> str:
+def get_language(params: RequestParams) -> str | None:
     """
     Selector for receive language from RequestParams
     :param params: type(RequestParams)
@@ -15,7 +16,7 @@ def get_language(params: RequestParams) -> str:
     return params.language
 
 
-def get_compare_type(params: RequestParams) -> str:
+def get_compare_type(params: RequestParams) -> str | None:
     """
     Selector for receive compare_type from RequestParams
     :param params: RequestParams
@@ -24,7 +25,7 @@ def get_compare_type(params: RequestParams) -> str:
     return params.compare_type
 
 
-def get_queries(params: RequestParams) -> dict:
+def get_queries(params: RequestParams) -> dict[str | None, str | None]:
     """
     Selector for receive queries from RequestParams
     :param params: RequestParams
@@ -169,6 +170,13 @@ def _get_response200_with_queries(
             'in_percent': stats['in_percent'],
         }
     )
+
+
+def handle_error(error) -> str:
+    if isinstance(error, ValidationError):
+        invalid_params = error.errors()[0]['ctx']['given']
+        return f'Wrong parameters transmitted: {invalid_params}'
+    return str(error)
 
 
 def get_response_404(params: RequestParams, error) -> Response404:

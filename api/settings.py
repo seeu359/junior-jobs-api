@@ -6,10 +6,10 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SQLITE = 'sqlite:///' + str(BASE_DIR) + '/db.sqlite'
+SQLITE = 'sqlite:///' + str(BASE_DIR) + '/testdb.sqlite'
 
 POSTGRES = os.getenv('PGCONNECT')
 
-DEBUG = os.getenv('DEBUG', False)
+DEBUG = os.getenv('DEBUG', True)
 
 DATABASE = SQLITE if DEBUG else POSTGRES

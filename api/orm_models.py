@@ -30,7 +30,7 @@ class StatisticsORM(constructor):
 
     __tablename__ = 'Statistics'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     language_id = Column(Integer, ForeignKey('Languages.id'))
     region_id = Column(Integer, ForeignKey('Regions.id'))
     site_id = Column(Integer, ForeignKey('Sites.id'), default=1)

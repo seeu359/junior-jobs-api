@@ -5,10 +5,11 @@ from api.orm_models import StatisticsORM
 
 
 class RequestParams(BaseModel):
-    language: Literal['python', 'java', 'javascript', 'php', 'ruby']
-    compare_type: Literal['today', 'week', 'month', 'custom'] | None
-    date1: str | None
-    date2: str | None
+    language: \
+        Literal['python', 'ruby', 'javascript', 'java', 'php'] | None = None
+    compare_type: Literal['today', 'week', 'month', 'custom'] | None = None
+    date1: str | None = None
+    date2: str | None = None
 
 
 class Response200(NamedTuple):

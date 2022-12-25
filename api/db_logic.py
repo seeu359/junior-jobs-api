@@ -1,8 +1,9 @@
 from api import orm_models as om
+from sqlalchemy.sql.expression import func
 from api.base_models import RequestParams, Statistics
 from api.services import get_queries, get_language, get_compare_type
 from datetime import date, timedelta
-
+from loguru import logger
 
 TIMEDELTA_DAYS = {
     'week': 7,
@@ -12,12 +13,21 @@ TIMEDELTA_DAYS = {
 
 class DB:
 
+    LANGUAGES_ID = {
+        'python': 1,
+        'php': 2,
+        'javascript': 3,
+        'ruby': 4,
+        'java': 5,
+    }
+
     def __init__(
             self,
             params: RequestParams
     ):
         self.language = get_language(params)
         self.compare_type = get_compare_type(params)
+        logger.info(self.compare_type)
         self.queries = get_queries(params)
         self.stat = Statistics(
             today=None,
@@ -86,3 +96,19 @@ class DB:
                 (om.LanguagesORM.language == self.language)).first()
             self.stat['custom_stat']['date1'] = date1
             self.stat['custom_stat']['date2'] = date2
+
+    def upload_statistics(self, data: dict[str, tuple[int, int]]) -> None:
+        with om.session() as s:
+            for lang, vacs in data.items():
+                max_id = s.query(func.max(om.StatisticsORM.id)).first()[0]
+                record = om.StatisticsORM(
+                    id=max_id + 1,
+                    language_id=self.LANGUAGES_ID[lang],
+                    region_id=113,
+                    site_id=1,
+                    vacancies=vacs[0],
+                    date=date.today(),
+                    no_experience=vacs[1]
+                )
+                s.add(record)
+            s.commit()
