@@ -103,7 +103,7 @@ def _get_today_response_200(
     today = statistics['today']
     return Response200(
         language=get_language(params),
-        compare_type=get_language(params),
+        compare_type=get_compare_type(params),
         date=str(today.date),
         vacancies=today.vacancies,
         no_experience=today.no_experience,
