@@ -43,16 +43,16 @@ class DB:
     def _mapper(self):
 
         if self.compare_type == 'today':
-            self.get_today_stat()
+            return self.get_today_stat()
 
         if self.compare_type == 'custom':
-            self.get_custom_stats()
+            return self.get_custom_stats()
 
         if self.compare_type is None:
-            self.get_array_of_stats()
+            return self.get_array_of_stats()
 
         else:
-            self.get_ct_stats()
+            return self.get_ct_stats()
 
     def get_array_of_stats(self) -> None:
         with om.session() as s:
