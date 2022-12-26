@@ -41,12 +41,16 @@ class DB:
         self._mapper()
 
     def _mapper(self):
+
         if self.compare_type == 'today':
             self.get_today_stat()
-        elif self.compare_type == 'custom':
+
+        if self.compare_type == 'custom':
             self.get_custom_stats()
-        elif self.compare_type is None:
+
+        if self.compare_type is None:
             self.get_array_of_stats()
+
         else:
             self.get_ct_stats()
 

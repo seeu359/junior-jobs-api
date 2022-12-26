@@ -1,12 +1,24 @@
 import os
 from pathlib import Path
+from loguru import logger
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SQLITE = 'sqlite:///' + str(BASE_DIR) + '/testdb.sqlite'
+PATH_TO_LOGS = BASE_DIR / 'api' / 'logs' / 'logs.log'
+
+LOGGER_FORMAT = '{time:YYYY.MM.DD - HH:mm:ss} - {level} - {message} '
+
+LOGGER = logger.add(
+    sink=PATH_TO_LOGS,
+    level='INFO',
+    format=LOGGER_FORMAT,
+)
+
+
+SQLITE = 'sqlite:///' + str(BASE_DIR) + '/db.sqlite'
 
 POSTGRES = os.getenv('PGCONNECT')
 

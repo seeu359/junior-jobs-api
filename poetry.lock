@@ -215,7 +215,7 @@ i18n = ["Babel (>=2.7)"]
 name = "loguru"
 version = "0.6.0"
 description = "Python logging made (stupidly) simple"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -481,7 +481,7 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 name = "win32-setctime"
 version = "1.1.0"
 description = "A small Python utility to set file creation time on Windows"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -491,7 +491,7 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.8"
-content-hash = "3351ecf41083276e97b0fccc6283e5507285f12929f5282b492545bb5f49f56f"
+content-hash = "483e9f784b9d1585ca3d533abeda13537ebe3ce7c0ec44b3b2351f8487988e55"
 
 [metadata.files]
 anyio = [

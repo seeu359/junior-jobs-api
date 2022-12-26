@@ -13,9 +13,12 @@ router = APIRouter(
 
 @router.post('/upload')
 async def upload_stats() -> JSONResponse:
+
     response = upload_statistics()
+
     status_code = status.HTTP_200_OK if response['success'] else \
         status.HTTP_403_FORBIDDEN
+
     return JSONResponse(
         content=response,
         status_code=status_code,
@@ -26,11 +29,13 @@ async def upload_stats() -> JSONResponse:
 async def stat_by_language(language: str) -> JSONResponse:
 
     params: RequestParams | Response404 = process_user_request(language)
+
     if isinstance(params, Response404):
         return JSONResponse(
             content=params._asdict(),
             status_code=status.HTTP_404_NOT_FOUND
         )
+
     response_done: list[Response200] = get_statistics(params)
 
     return JSONResponse(

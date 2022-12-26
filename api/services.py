@@ -82,11 +82,14 @@ def make_request_params(
 def get_response_200(params: RequestParams, statistics: Statistics):
     if get_compare_type(params) == 'today':
         return _get_today_response_200(params, statistics)
+
     elif get_compare_type(params) is None:
         return _get_list_of_response200(params, statistics)
+
     elif get_queries(params)['date1'] is not None and \
             get_queries(params)['date2'] is not None:
         return _get_response200_with_queries(params, statistics)
+
     else:
         return _get_ct_response_200(params, statistics)
 
@@ -173,9 +176,11 @@ def _get_response200_with_queries(
 
 
 def handle_error(error) -> str:
+
     if isinstance(error, ValidationError):
         invalid_params = error.errors()[0]['ctx']['given']
         return f'Wrong parameters transmitted: {invalid_params}'
+
     return str(error)
 
 
