@@ -5,11 +5,6 @@ from api.services import get_queries, get_language, get_compare_type
 from datetime import date, timedelta
 from loguru import logger
 
-TIMEDELTA_DAYS = {
-    'week': 7,
-    'month': 30,
-}
-
 
 class DB:
 
@@ -21,14 +16,30 @@ class DB:
         'java': 5,
     }
 
+    TIMEDELTA_DAYS = {
+        'week': 7,
+        'month': 30,
+    }
+
+    __slots__ = (
+        'language',
+        'compare_type',
+        'queries',
+        'stat',
+    )
+
     def __init__(
             self,
             params: RequestParams
     ):
         self.language = get_language(params)
+
         self.compare_type = get_compare_type(params)
+
         logger.info(self.compare_type)
+
         self.queries = get_queries(params)
+
         self.stat = Statistics(
             today=None,
             ct_stat=None,
@@ -38,6 +49,7 @@ class DB:
                 'date2': None,
             },
         )
+
         self._mapper()
 
     def _mapper(self):
@@ -56,55 +68,68 @@ class DB:
 
     def get_array_of_stats(self) -> None:
         with om.session() as s:
+
             list_stats = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM). \
                 filter(
                 om.LanguagesORM.language ==
                 self.language).all()
+
             self.stat['array_stat'] = list_stats
 
     def get_today_stat(self) -> None:
         with om.session() as s:
+
             today_stat = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM). \
                 filter(
                 (om.StatisticsORM.date == date.today()) &
                 (om.LanguagesORM.language == self.language)).\
                 first()
+
             self.stat['today'] = today_stat
 
     def get_ct_stats(self) -> None:
+
         time_delta = date.today() - timedelta(
-            days=TIMEDELTA_DAYS[self.compare_type]
+            days=self.TIMEDELTA_DAYS[self.compare_type]
         )
+
         with om.session() as s:
             self.get_today_stat()
+
             ct_stat = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM).\
                 filter(
                 (om.StatisticsORM.date == time_delta) &
                 (om.LanguagesORM.language == self.language)).first()
+
             self.stat['ct_stat'] = ct_stat
 
     def get_custom_stats(self):
         with om.session() as s:
+
             date1 = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM).\
                 filter(
                 (om.StatisticsORM.date == self.queries['date1']) &
                 (om.LanguagesORM.language == self.language)).first()
+
             date2 = s.query(om.StatisticsORM).\
                 join(om.LanguagesORM).\
                 filter(
                 (om.StatisticsORM.date == self.queries['date2']) &
                 (om.LanguagesORM.language == self.language)).first()
+
             self.stat['custom_stat']['date1'] = date1
             self.stat['custom_stat']['date2'] = date2
 
     def upload_statistics(self, data: dict[str, tuple[int, int]]) -> None:
         with om.session() as s:
             for lang, vacs in data.items():
+
                 max_id = s.query(func.max(om.StatisticsORM.id)).first()[0]
+
                 record = om.StatisticsORM(
                     id=max_id + 1,
                     language_id=self.LANGUAGES_ID[lang],
@@ -115,4 +140,5 @@ class DB:
                     no_experience=vacs[1]
                 )
                 s.add(record)
+
             s.commit()

@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel
-from typing import TypedDict, NamedTuple
+from typing import TypedDict
 from api.orm_models import StatisticsORM
 
 
@@ -12,7 +12,7 @@ class RequestParams(BaseModel):
     date2: str | None = None
 
 
-class Response200(NamedTuple):
+class Response200(BaseModel):
     language: str
     date: str
     vacancies: int
@@ -22,7 +22,7 @@ class Response200(NamedTuple):
     compare_type: str | None
 
 
-class CTResponse200(NamedTuple):
+class CTResponse200(BaseModel):
     language: str
     compare_type: str
     date1: str
@@ -32,7 +32,7 @@ class CTResponse200(NamedTuple):
     comparison: dict[str, int]
 
 
-class Response404(NamedTuple):
+class Response404(BaseModel):
     errors: str
     language: str
     compare_type: str | None

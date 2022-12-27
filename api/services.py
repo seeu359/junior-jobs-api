@@ -70,16 +70,19 @@ def make_request_params(
     :return: type(RequestParams)
     """
     constructor = RequestParams.construct if construct else RequestParams
+
     params = constructor(
         language=language,
         compare_type=compare_type,
         date1=queries.get('date1', None),
         date2=queries.get('date2', None),
     )
+
     return params
 
 
 def get_response_200(params: RequestParams, statistics: Statistics):
+
     if get_compare_type(params) == 'today':
         return _get_today_response_200(params, statistics)
 
@@ -97,7 +100,7 @@ def get_response_200(params: RequestParams, statistics: Statistics):
 def _get_today_response_200(
         params: RequestParams,
         statistics: Statistics,
-) -> Response200 | list[Response200] | CTResponse200:  # Need change docs!
+) -> Response200 | list[Response200] | CTResponse200 | CTResponse200:
 
     """Create pydantic BaseModel with responses data.
     Data from this model won't validate because data from user
@@ -118,8 +121,10 @@ def _get_today_response_200(
 def _get_list_of_response200(
         params: RequestParams,
         statistics: Statistics) -> list[Response200]:
+
     stat_list: list[om.StatisticsORM] = statistics['array_stat']
     result = list()
+
     for stat in stat_list:
         result.append(Response200(
             language=get_language(params),
@@ -140,6 +145,7 @@ def _get_ct_response_200(
     date1 = statistics.get('today')
     date2 = statistics.get('ct_stat')
     stats = _compute_stat(date1, date2)
+
     return CTResponse200(
         language=get_language(params),
         compare_type=get_compare_type(params),
@@ -161,6 +167,7 @@ def _get_response200_with_queries(
     date1 = statistics['custom_stat']['date1']
     date2 = statistics['custom_stat']['date2']
     stats = _compute_stat(date2, date1)
+
     return CTResponse200(
         language=get_language(params),
         compare_type=get_compare_type(params),
@@ -201,9 +208,12 @@ def get_response_404(params: RequestParams, error) -> Response404:
 
 def _compute_stat(reduced: om.StatisticsORM, reducer: om.StatisticsORM) \
         -> dict[str, int]:
+
     in_amount = reduced.vacancies - reducer.vacancies
+
     in_percents = round(reduced.vacancies / reducer.vacancies *
                         COEFFICIENT - COEFFICIENT)
+
     return {
         'in_amount': in_amount,
         'in_percent': in_percents,

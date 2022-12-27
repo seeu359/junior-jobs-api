@@ -17,7 +17,7 @@ client = TestClient(app)
 def test_stat_language_route(path):
     response = client.get('/stat/' + path)
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json(), dict)
 
 
 @pytest.mark.parametrize('path',

@@ -9,7 +9,7 @@ from api.exceptions import InvalidDateParams, DataAlreadyUploaded
 from api.services import make_request_params, get_response_404, \
     get_response_200, check_queries, handle_error
 from api.base_models import Response200, Response404, RequestParams, \
-    Statistics
+    Statistics, CTResponse200
 
 
 ######################################
@@ -57,19 +57,28 @@ def process_user_request(
     return params
 
 
-def get_statistics(params: RequestParams) -> Response200 | list[Response200]:
+def get_statistics(
+        params: RequestParams
+) -> Response200 | list[Response200] | CTResponse200:
+
     statistics: Statistics = DB(params).stat
     response = get_response_200(params, statistics)
+
     return response
 
 
 def upload_statistics():
     try:
         _check_data_in_db()
+
         data = _get_data_from_hh_api()
+
         DB(RequestParams()).upload_statistics(data)
+
         return dict(success=True, error_message=None)
+
     except DataAlreadyUploaded as e_message:
+
         loguru.logger.info(type(e_message))
         return dict(success=False, error_message=str(e_message))
 
