@@ -1,5 +1,5 @@
 run:
-	uvicorn app:app --reload
+	uvicorn api.main:app --reload
 
 lint:
 	poetry run flake8
