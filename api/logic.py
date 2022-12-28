@@ -2,12 +2,13 @@ import loguru
 import requests
 from datetime import date
 from string import Template
+
 from pydantic import ValidationError
+
 from api.db_logic import DB
 from api import orm_models as om
 from api.exceptions import InvalidDateParams, DataAlreadyUploaded
-from api.services import make_request_params, get_response_404, \
-    get_response_200, check_queries, handle_error
+from api.services import get_response_404, get_response_200, get_queries
 from api.base_models import Response200, Response404, RequestParams, \
     Statistics, CTResponse200
 
@@ -43,7 +44,7 @@ def process_user_request(
             language,
             compare_type=compare_type,
             **queries)
-        check_queries(params)
+        _check_queries(params)
 
     except (ValidationError, InvalidDateParams) as e:
         params = make_request_params(
@@ -52,9 +53,51 @@ def process_user_request(
             compare_type=compare_type,
             **queries
         )
-        error = handle_error(e)
+        error = _handle_error(e)
         return get_response_404(params, error)
     return params
+
+
+#######################################
+# API FOR CREATE  REQUEST PARAMETERS
+#######################################
+
+def make_request_params(
+        language: str,
+        *,
+        construct: bool = False,
+        compare_type: str | None = None,
+        **queries: str | None,
+        ) -> RequestParams:
+    """
+    Constructor for request params. Make RequestParams pydantic BaseModel
+    class, which contains all params of user request. If construct
+    param is True, error validation does not happen, else - params
+    will be validated. All users params must be constructed by this
+    abstraction!
+    :param language: The only one require param. It has in all requests to API.
+    :param construct: type(bool). If True validation does not happen.
+    :param compare_type: Optional param. Not contains in each request.
+    :param queries: Optional param. Collection contains 2 date - date1
+    and date2 for specify custom date range. Each of date may be None,
+    or may be not. For example, if request contains 2 queries of date:
+    date1=2022.12.01 and date2=2022.12.11 - in this case will be output
+    statistics for date range 2022.12.01 - 2022.12.11.
+    date-range statistics.
+    :return: type(RequestParams)
+    """
+    constructor = RequestParams.construct if construct else RequestParams
+
+    params = constructor(
+        language=language,
+        compare_type=compare_type,
+        date1=queries.get('date1', None),
+        date2=queries.get('date2', None),
+    )
+
+    return params
+
+######################################
 
 
 def get_statistics(
@@ -94,7 +137,27 @@ def _check_data_in_db():
             )
 
 
-def _get_data_from_hh_api() -> dict[str, tuple[int, int]]:
+def _check_queries(params: RequestParams):
+    dates = get_queries(params)
+    if not dates['date1'] and not dates['date2']:
+        return
+    if dates['date1'] > dates['date2']:
+        raise InvalidDateParams('The transmitted time interval is incorrect')
+
+
+def _handle_error(error) -> str:
+
+    if isinstance(error, ValidationError):
+        invalid_params = error.errors()[0]['ctx']['given']
+        return f'Wrong parameters transmitted: {invalid_params}'
+
+    return str(error)
+
+
+def _get_data_from_hh_api(
+        all_vacs_template=ALL_VACS_TEMPLATE,
+        no_exp_template=NO_EXP_TEMPLATE,
+) -> dict[str, tuple[int, int]]:
     """
     Request to HH API to get data about vacancies.
     :return: dict with tuple where tuple[0] - all vacancies count,
@@ -105,10 +168,10 @@ def _get_data_from_hh_api() -> dict[str, tuple[int, int]]:
     for lang in languages:
         all_vacs = \
             requests.get(
-                ALL_VACS_TEMPLATE.substitute(language=lang, area_id=113)
+                all_vacs_template.substitute(language=lang, area_id=113)
             ).json()
         no_exp_vacs = requests.get(
-            NO_EXP_TEMPLATE.substitute(language=lang, area_id=113)
+            no_exp_template.substitute(language=lang, area_id=113)
         ).json()
         result[lang] = all_vacs['found'], no_exp_vacs['found']
     return result

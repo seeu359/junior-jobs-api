@@ -1,8 +1,7 @@
 from api import orm_models as om
-from pydantic import ValidationError
-from api.exceptions import InvalidDateParams
 from api.base_models import RequestParams, Response200, Response404, \
     CTResponse200, Statistics
+
 
 COEFFICIENT = 100
 
@@ -35,50 +34,6 @@ def get_queries(params: RequestParams) -> dict[str | None, str | None]:
         'date1': params.date1,
         'date2': params.date2,
     }
-
-
-def check_queries(params: RequestParams):
-    dates = get_queries(params)
-    if not dates['date1'] and not dates['date2']:
-        return
-    if dates['date1'] > dates['date2']:
-        raise InvalidDateParams('The transmitted time interval is incorrect')
-
-
-def make_request_params(
-        language: str,
-        *,
-        construct: bool = False,
-        compare_type: str | None = None,
-        **queries: str | None,
-        ) -> RequestParams:
-    """
-    Constructor for request params. Make RequestParams pydantic BaseModel
-    class, which contains all params of user request. If construct
-    param is True, error validation does not happen, else - params
-    will be validated. All users params must be constructed by this
-    abstraction!
-    :param language: The only one require param. It has in all requests to API.
-    :param construct: type(bool). If True validation does not happen.
-    :param compare_type: Optional param. Not contains in each request.
-    :param queries: Optional param. Collection contains 2 date - date1
-    and date2 for specify custom date range. Each of date may be None,
-    or may be not. For example, if request contains 2 queries of date:
-    date1=2022.12.01 and date2=2022.12.11 - in this case will be output
-    statistics for date range 2022.12.01 - 2022.12.11.
-    date-range statistics.
-    :return: type(RequestParams)
-    """
-    constructor = RequestParams.construct if construct else RequestParams
-
-    params = constructor(
-        language=language,
-        compare_type=compare_type,
-        date1=queries.get('date1', None),
-        date2=queries.get('date2', None),
-    )
-
-    return params
 
 
 def get_response_200(params: RequestParams, statistics: Statistics):
@@ -180,15 +135,6 @@ def _get_response200_with_queries(
             'in_percent': stats['in_percent'],
         }
     )
-
-
-def handle_error(error) -> str:
-
-    if isinstance(error, ValidationError):
-        invalid_params = error.errors()[0]['ctx']['given']
-        return f'Wrong parameters transmitted: {invalid_params}'
-
-    return str(error)
 
 
 def get_response_404(params: RequestParams, error) -> Response404:

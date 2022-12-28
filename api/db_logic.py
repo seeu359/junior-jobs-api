@@ -33,13 +33,9 @@ class DB:
             params: RequestParams
     ):
         self.language = get_language(params)
-
         self.compare_type = get_compare_type(params)
-
         logger.info(self.compare_type)
-
         self.queries = get_queries(params)
-
         self.stat = Statistics(
             today=None,
             ct_stat=None,
@@ -49,7 +45,6 @@ class DB:
                 'date2': None,
             },
         )
-
         self._mapper()
 
     def _mapper(self):
