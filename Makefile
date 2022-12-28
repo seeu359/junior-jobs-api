@@ -1,5 +1,5 @@
 run:
-	uvicorn api.main:app --reload
+	uvicorn api.scripts.main:app --reload
 
 lint:
 	poetry run flake8
@@ -18,7 +18,3 @@ test-coverage:
 
 install:
 	poetry install
-
-deploy:
-	pip install poetry
-	make install
