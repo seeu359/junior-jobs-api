@@ -3,7 +3,7 @@ from api.routes import main_page
 from api.routes import stats
 
 """
-Entry point
+Main app
 """
 
 app = FastAPI()
