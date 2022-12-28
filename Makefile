@@ -18,3 +18,7 @@ test-coverage:
 
 install:
 	poetry install
+
+deploy:
+	pip install poetry
+	make install
