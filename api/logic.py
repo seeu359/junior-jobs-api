@@ -5,12 +5,20 @@ from string import Template
 
 from pydantic import ValidationError
 
-from api.db_logic import DB
-from api import orm_models as om
-from api.exceptions import InvalidDateParams, DataAlreadyUploaded
-from api.services import get_response_404, get_response_200, get_queries
-from api.base_models import Response200, Response404, RequestParams, \
-    Statistics, CTResponse200
+from api.lib.db_logic import DB
+from api.lib import orm_models as om
+from api.lib.exceptions import InvalidDateParams, DataAlreadyUploaded
+
+from api.lib.base_models import Response404, RequestParams, Statistics
+from api.lib.services import (
+    get_response_404,
+    get_queries,
+    get_compare_type,
+    get_list_of_response200,
+    get_ct_response_200,
+    get_today_response_200,
+    get_response200_with_queries,
+)
 
 
 ######################################
@@ -21,7 +29,6 @@ ALL_VACS_TEMPLATE = Template(
         'text=$language+junior&per_page=100&area=$area_id'
 )
 
-
 NO_EXP_TEMPLATE = Template(
         'https://api.hh.ru/vacancies?'
         'text=$language+junior&per_page=100&'
@@ -29,6 +36,8 @@ NO_EXP_TEMPLATE = Template(
 )
 
 ######################################
+
+RUSSIA_ID = 113
 
 
 def process_user_request(
@@ -102,12 +111,23 @@ def make_request_params(
 
 def get_statistics(
         params: RequestParams
-) -> Response200 | list[Response200] | CTResponse200:
+) -> Statistics:
 
     statistics: Statistics = DB(params).stat
-    response = get_response_200(params, statistics)
+    return statistics
 
-    return response
+
+def get_response_200(params: RequestParams, statistics: Statistics):
+
+    if get_compare_type(params) == 'today':
+        return get_today_response_200(params, statistics)
+
+    elif get_queries(params)['date1'] is not None and \
+            get_queries(params)['date2'] is not None:
+        return get_response200_with_queries(params, statistics)
+
+    else:
+        return get_ct_response_200(params, statistics)
 
 
 def upload_statistics():
@@ -165,13 +185,21 @@ def _get_data_from_hh_api(
     """
     languages = ['python', 'php', 'javascript', 'ruby', 'java']
     result = dict()
+
     for lang in languages:
+
         all_vacs = \
             requests.get(
-                all_vacs_template.substitute(language=lang, area_id=113)
+                all_vacs_template.substitute(
+                    language=lang, area_id=RUSSIA_ID
+                )
             ).json()
+
         no_exp_vacs = requests.get(
-            no_exp_template.substitute(language=lang, area_id=113)
+            no_exp_template.substitute(
+                language=lang, area_id=RUSSIA_ID
+            )
         ).json()
+
         result[lang] = all_vacs['found'], no_exp_vacs['found']
     return result
