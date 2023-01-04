@@ -48,7 +48,7 @@ Response: <a href="https://ibb.co/xC3nYM1"><img src="https://i.ibb.co/xC3nYM1/we
 
 ``GET /stat/{language}/custom/?date1={value}&date2={value}`` - logic is similar with regular request by compare type. First date must be less than second date for the gap will be correct. Otherwise will be raised exception. 
 
-Request example:
+Example request:
 ``https://jun-jobs-api.online/stat/python/custom/?date1=2022-11-13&date2=2023-01-02``
 
 Response: <a href="https://ibb.co/RgBFckY"><img src="https://i.ibb.co/RgBFckY/custom.png" alt="custom" border="0"></a>
