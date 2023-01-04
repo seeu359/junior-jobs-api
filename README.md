@@ -1,4 +1,6 @@
 ## Junior-Jobs API
+
+[![code-check](https://github.com/seeu359/junior-jobs-api/actions/workflows/tests.yaml/badge.svg)](https://github.com/seeu359/junior-jobs-api/actions/workflows/tests.yaml)
 ___
 > https://jun-jobs-api.online/
 
