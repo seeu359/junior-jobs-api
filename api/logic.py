@@ -14,7 +14,6 @@ from api.lib.services import (
     get_response_404,
     get_queries,
     get_compare_type,
-    get_list_of_response200,
     get_ct_response_200,
     get_today_response_200,
     get_response200_with_queries,
