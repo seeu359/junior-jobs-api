@@ -1,20 +1,12 @@
-from loguru import logger
-
 from fastapi import APIRouter, status
 from fastapi.responses import Response
-from fastapi_pagination import Page, paginate, add_pagination
+from fastapi_pagination import Page, add_pagination, paginate
+from loguru import logger
 
-
-from api.logic import (
-    get_statistics,
-    process_user_request,
-    upload_statistics,
-    get_list_of_response200,
-    get_response_200,
-)
-
-from api.lib.base_models import Response200, Response404, RequestParams
-
+from api.lib.base_models import RequestParams, Response200, Response404
+from api.lib.services import get_list_of_response200
+from api.logic import (get_response_200, get_statistics, process_user_request,
+                       upload_statistics)
 
 router = APIRouter(
     prefix='/stat',

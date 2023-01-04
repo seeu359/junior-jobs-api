@@ -1,10 +1,11 @@
-from loguru import logger
 from datetime import date, timedelta
+
+from loguru import logger
 from sqlalchemy.sql.expression import func
 
 from api.lib import orm_models as om
 from api.lib.base_models import RequestParams, Statistics
-from api.lib.services import get_queries, get_language, get_compare_type
+from api.lib.services import get_compare_type, get_language, get_queries
 
 
 class DB:

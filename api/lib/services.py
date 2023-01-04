@@ -1,7 +1,6 @@
 from api.lib import orm_models as om
-from api.lib.base_models import RequestParams, Response200, Response404, \
-    CTResponse200, Statistics
-
+from api.lib.base_models import (CTResponse200, RequestParams, Response200,
+                                 Response404, Statistics)
 
 COEFFICIENT = 100
 

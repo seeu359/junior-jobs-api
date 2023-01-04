@@ -1,24 +1,17 @@
-import loguru
-import requests
 from datetime import date
 from string import Template
 
+import loguru
+import requests
 from pydantic import ValidationError
 
-from api.lib.db_logic import DB
 from api.lib import orm_models as om
-from api.lib.exceptions import InvalidDateParams, DataAlreadyUploaded
-
-from api.lib.base_models import Response404, RequestParams, Statistics
-from api.lib.services import (
-    get_response_404,
-    get_queries,
-    get_compare_type,
-    get_ct_response_200,
-    get_today_response_200,
-    get_response200_with_queries,
-)
-
+from api.lib.base_models import RequestParams, Response404, Statistics
+from api.lib.db_logic import DB
+from api.lib.exceptions import DataAlreadyUploaded, InvalidDateParams
+from api.lib.services import (get_compare_type, get_ct_response_200,
+                              get_queries, get_response200_with_queries,
+                              get_response_404, get_today_response_200)
 
 ######################################
 # URL TEMPLATE FOR REQUESTS TO API HH

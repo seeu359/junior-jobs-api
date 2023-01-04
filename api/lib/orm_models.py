@@ -1,10 +1,8 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Boolean
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import (Boolean, Column, Date, ForeignKey, Integer, String,
+                        create_engine)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from api.settings import DATABASE
-
 
 engine = create_engine(DATABASE, future=True)
 

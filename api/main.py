@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from api.routes import main_page
-from api.routes import stats
+
+from api.routes import main_page, stats
 
 """
 Main app

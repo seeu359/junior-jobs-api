@@ -1,6 +1,7 @@
-from typing import Literal
+from typing import Literal, TypedDict
+
 from pydantic import BaseModel
-from typing import TypedDict
+
 from api.lib.orm_models import StatisticsORM
 
 

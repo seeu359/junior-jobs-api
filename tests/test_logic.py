@@ -1,10 +1,8 @@
 import pytest
-
 from pydantic import ValidationError
 
-from api.logic import make_request_params
-from api.logic import process_user_request
 from api.lib.base_models import RequestParams, Response404
+from api.logic import make_request_params, process_user_request
 
 
 @pytest.mark.parametrize('language, compare_type',
