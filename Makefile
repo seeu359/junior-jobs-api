@@ -16,5 +16,8 @@ testroutes:
 test-coverage:
 	poetry run pytest --cov=jun_jobs_bot tests/ --cov-report xml
 
-install:
+p_install:
 	poetry install
+
+install:
+	pip install -r requirements.txt
