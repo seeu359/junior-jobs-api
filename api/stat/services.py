@@ -78,19 +78,6 @@ class StatServices:
             (models.LanguagesORM.language == language)). \
             first()
 
-    @classmethod
-    def get_statistics_schemes(
-            cls, language, compare_type, vacs_were, vacs_became, stats,
-    ) -> schemes.CTStatistics:
-
-        return schemes.CTStatistics(
-            language=language,
-            compare_type=compare_type,
-            vacs_were=vacs_were,
-            vacs_became=vacs_became,
-            comparison=stats,
-        )
-
     def __init__(self, session: Session = Depends(get_session)):
 
         self.session = session
@@ -147,12 +134,12 @@ class StatServices:
 
         calculated_stats = self.compute_stat(today, week)
 
-        return self.get_statistics_schemes(
-            language,
-            compare_type,
-            week.vacancies,
-            today.vacancies,
-            calculated_stats
+        return schemes.CTStatistics(
+            language=language,
+            compare_type=compare_type,
+            vacs_were=week.vacancies,
+            vacs_became=today.vacancies,
+            comparison=calculated_stats,
         )
 
     def get_array_stat(self, language: str) -> list[schemes.Statistics]:
