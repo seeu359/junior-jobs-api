@@ -1,17 +1,10 @@
-from sqlalchemy import (Boolean, Column, Date, ForeignKey, Integer, String,
-                        create_engine)
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
 
-from api.settings import DATABASE
-
-engine = create_engine(DATABASE, future=True)
-
-session = sessionmaker(engine)
-
-constructor = declarative_base(engine)
+from sqlalchemy.orm import relationship
+from api.database import Base
 
 
-class LanguagesORM(constructor):
+class LanguagesORM(Base):
     """Models with languages which available to compare.
     In moment, available: Python, JavaScript, Ruby, PHP, Java"""
 
@@ -22,7 +15,7 @@ class LanguagesORM(constructor):
     r = relationship('StatisticsORM')
 
 
-class StatisticsORM(constructor):
+class StatisticsORM(Base):
     """Models with vacancies statistics"""
 
     __tablename__ = 'Statistics'
@@ -36,7 +29,7 @@ class StatisticsORM(constructor):
     no_experience = Column(Integer, default=0)
 
 
-class RegionsORM(constructor):
+class RegionsORM(Base):
     """Models with regions ID. The region IDs in the database are the
     same as the region IDs given by the HH API"""
 
@@ -47,7 +40,7 @@ class RegionsORM(constructor):
     r = relationship('StatisticsORM')
 
 
-class SitesORM(constructor):
+class SitesORM(Base):
     """Recruiting platforms available for parsing jobs. Currently there is
     one platform available - HH.ru"""
 
@@ -58,7 +51,7 @@ class SitesORM(constructor):
     r = relationship('StatisticsORM')
 
 
-class Users(constructor):
+class Users(Base):
     """Info about users. This functional are not realized yet"""
 
     __tablename__ = 'Users'
