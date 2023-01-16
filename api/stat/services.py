@@ -1,5 +1,6 @@
 import datetime
 
+from loguru import logger
 from fastapi import Depends, HTTPException, status
 import requests
 from sqlalchemy import func
@@ -45,7 +46,7 @@ class StatServices:
 
             no_exp_template = 'https://api.hh.ru/vacancies?' \
                               'text={}+junior&per_page=100&' \
-                              'area=${}&experience=noExperience'. \
+                              'area={}&experience=noExperience'. \
                 format(lang, RUSSIA_ID)
 
             all_vacs = \
@@ -98,6 +99,7 @@ class StatServices:
     def get_today_stat(self, language: str) -> schemes.Statistics:
 
         today = self.get_stat_from_db(language, self.TODAY)
+        logger.info(today.date)
 
         if not today:
 
@@ -121,23 +123,23 @@ class StatServices:
 
         days = compare_data[0]
         compare_type = compare_data[1]
-
+        logger.info(days)
         # It's plug since the data for 3 or more months have not
         # yet been collected
-        if days != 7 or days != 30:
+        if days != 7 and days != 30:
             days = 30
         #
         time_delta = self.TODAY - datetime.timedelta(days=days)
 
         today = self.get_stat_from_db(language, self.TODAY)
-        week = self.get_stat_from_db(language, time_delta)
+        ct_stat = self.get_stat_from_db(language, time_delta)
 
-        calculated_stats = self.compute_stat(today, week)
+        calculated_stats = self.compute_stat(today, ct_stat)
 
         return schemes.CTStatistics(
             language=language,
             compare_type=compare_type,
-            vacs_were=week.vacancies,
+            vacs_were=ct_stat.vacancies,
             vacs_became=today.vacancies,
             comparison=calculated_stats,
         )
@@ -163,7 +165,6 @@ class StatServices:
     def upload(self) -> list:
 
         self.check_data_in_db()
-
         data = self.get_data_from_hh_api()
         for lang, vacs in data.items():
 
