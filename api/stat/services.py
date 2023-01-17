@@ -9,6 +9,7 @@ from api.database import get_session, Session
 from api.stat import schemes, models
 
 RUSSIA_ID = 113
+TODAY = datetime.date.today()
 
 
 class StatServices:
@@ -20,7 +21,6 @@ class StatServices:
         'ruby': 4,
         'java': 5,
     }
-    TODAY = datetime.date.today()
     COEFFICIENT = 100
 
     @classmethod
@@ -60,7 +60,7 @@ class StatServices:
     def check_data_in_db(self):
         data = self.session.query(models.StatisticsORM). \
             filter(
-            models.StatisticsORM.date == self.TODAY).first()
+            models.StatisticsORM.date == TODAY).first()
 
         if data is not None:
             self.exception(
@@ -98,7 +98,7 @@ class StatServices:
 
     def get_today_stat(self, language: str) -> schemes.Statistics:
 
-        today = self.get_stat_from_db(language, self.TODAY)
+        today = self.get_stat_from_db(language, TODAY)
         logger.info(today.date)
 
         if not today:
@@ -129,9 +129,9 @@ class StatServices:
         if days != 7 and days != 30:
             days = 30
         #
-        time_delta = self.TODAY - datetime.timedelta(days=days)
+        time_delta = TODAY - datetime.timedelta(days=days)
 
-        today = self.get_stat_from_db(language, self.TODAY)
+        today = self.get_stat_from_db(language, TODAY)
         ct_stat = self.get_stat_from_db(language, time_delta)
 
         calculated_stats = self.compute_stat(today, ct_stat)
@@ -180,7 +180,7 @@ class StatServices:
                 region_id=113,
                 site_id=1,
                 vacancies=vacs[0],
-                date=self.TODAY,
+                date=TODAY,
                 no_experience=vacs[1]
             )
             self.session.add(record)
