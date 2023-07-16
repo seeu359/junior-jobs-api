@@ -3,6 +3,7 @@ run:
 
 lint:
 	poetry run flake8
+	poetry run black . --check
 
 test:
 	poetry run pytest tests
